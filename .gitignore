@@ -1,0 +1,42 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django migrations
+**/migrations/*.pyc
+**/migrations/__pycache__/
+
+# Environment variables
+.env
+
+# SQLite (якщо раптом зʼявиться)
+*.sqlite3
+
+# Logs
+*.log
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Virtual environments
+venv/
+env/
+
+# Docker
+docker_postgres_data/
+*.pid
+
+# VS Code / JetBrains
+.vscode/
+.idea/
+
+# Python packaging
+build/
+develop-eggs/
+dist/
+eggs/
+*.egg-info/
+.installed.cfg
+*.egg
