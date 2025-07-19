@@ -1,30 +1,114 @@
-![Project Structure](image.png)
+# DevOps Lesson 7 – Deploy Django App to EKS with Terraform and Helm
 
 ## Project Overview
 
-This Terraform project sets up infrastructure on AWS, including:
+This project automates the deployment of a Django application on AWS using:
+- Terraform for infrastructure (VPC, ECR, EKS)
+- Docker to build the Django app image
+- Amazon ECR to store the image
+- Helm for deploying the app to Kubernetes
+- ConfigMap for environment variables
+- Horizontal Pod Autoscaler (HPA)
 
-- Remote backend state management using S3 and DynamoDB
-- A VPC with public and private subnets
-- An Elastic Container Registry (ECR) repository
+---
 
-## File Structure
+## Project Structure
 
-- `main.tf` — the main entry point to invoke modules
-- `backend.tf` — backend configuration for remote state (S3 + DynamoDB)
-- `outputs.tf` — aggregated outputs from all modules
+```
+lesson-7/
+├── backend.tf              # Remote state backend (S3 + DynamoDB)
+├── main.tf                 # Root Terraform config
+├── outputs.tf              # Outputs from modules
+├── modules/
+│   ├── ecr/                # ECR repository for Docker images
+│   ├── eks/                # EKS Kubernetes cluster and node groups
+│   └── vpc/                # VPC, subnets, NAT, routing
+├── charts/
+│   └── django-app/
+│       ├── Chart.yaml
+│       ├── values.yaml
+│       └── templates/
+│           ├── deployment.yaml
+│           ├── service.yaml
+│           ├── configmap.yaml
+│           └── hpa.yaml
+```
 
-### Modules
+---
 
-- `modules/s3-backend/` — creates an S3 bucket and DynamoDB table for Terraform state management
-- `modules/vpc/` — sets up a VPC, subnets, route tables, internet/NAT gateways
-- `modules/ecr/` — creates an ECR repository with image scanning and access policies
+## Prerequisites
 
-## Usage
+- AWS CLI configured
+- kubectl installed
+- Helm installed
+- Docker installed
+- Terraform >= 1.3
 
-```hcl
+---
+
+## Terraform Setup
+
+### 1. Initialize and deploy infrastructure
+
+```bash
+cd lesson-7
 terraform init
 terraform plan
 terraform apply
-terraform destroy
 ```
+
+### 2. Get access to EKS cluster
+
+```bash
+aws eks --region <your-region> update-kubeconfig --name <your-cluster-name>
+```
+
+---
+
+## Build and Push Django Image to ECR
+
+```bash
+# Authenticate Docker to ECR
+aws ecr get-login-password --region <your-region> | docker login --username AWS --password-stdin <your-account-id>.dkr.ecr.<your-region>.amazonaws.com
+
+# Build Docker image
+docker build -t <your-ecr-repo-name> ./docker
+
+# Tag the image
+docker tag <your-ecr-repo-name>:latest <your-account-id>.dkr.ecr.<your-region>.amazonaws.com/<your-ecr-repo-name>:latest
+
+# Push the image
+docker push <your-account-id>.dkr.ecr.<your-region>.amazonaws.com/<your-ecr-repo-name>:latest
+```
+
+---
+
+## Helm Deployment
+
+```bash
+cd lesson-7/charts/django-app
+
+# Install app with Helm
+helm install django-app . --values values.yaml
+
+# Check deployment
+kubectl get all
+```
+
+---
+
+## Result
+
+- Kubernetes cluster is created via Terraform.
+- Django image is stored in ECR.
+- Helm is used to deploy the app to EKS.
+- LoadBalancer service exposes the app publicly.
+- Environment variables are stored in a ConfigMap.
+- HPA scales pods based on CPU utilization (min 2, max 6, target 70%).
+
+---
+
+## (Optional) Ingress + TLS
+
+If you have a domain and certificate manager installed, configure ingress with TLS support via cert-manager.
+
