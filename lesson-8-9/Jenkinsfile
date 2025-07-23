@@ -17,16 +17,17 @@ spec:
         - sleep
       args:
         - 99d
+     # Lightweight container that has git + coreutils
     - name: git
       image: alpine/git
-      command: ["cat"]
+      command: ["cat"]       # keep it idle so Jenkins can exec into it
       tty: true
 """
     }
   }
 
   environment {
-    ECR_REGISTRY = "818682288271.dkr.ecr.eu-central-1.amazonaws.com"
+    ECR_REGISTRY = "804054839611.dkr.ecr.eu-central-1.amazonaws.com"
     IMAGE_NAME   = "lesson-8-9-ecr"
     IMAGE_TAG    = "v1.0.${BUILD_NUMBER}"
 
@@ -40,12 +41,12 @@ spec:
         container('kaniko') {
           sh '''
             cd docker
-            /kaniko/executor \
-              --context `pwd` \
-              --dockerfile `pwd`/Dockerfile \
-              --destination=$ECR_REGISTRY/$IMAGE_NAME:$IMAGE_TAG \
-              --cache=true \
-              --insecure \
+            /kaniko/executor \\
+              --context `pwd` \\
+              --dockerfile `pwd`/Dockerfile \\
+              --destination=$ECR_REGISTRY/$IMAGE_NAME:$IMAGE_TAG \\
+              --cache=true \\
+              --insecure \\
               --skip-tls-verify
           '''
         }
@@ -57,6 +58,7 @@ spec:
         container('git') {
           withCredentials([usernamePassword(credentialsId: 'github-token', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
             sh '''
+
               git clone https://$USERNAME:$PASSWORD@github.com/saniola/devops.git
               cd devops
               git checkout lesson-8-9

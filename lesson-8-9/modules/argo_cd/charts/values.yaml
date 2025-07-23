@@ -18,7 +18,7 @@ applications:
         selfHeal: true
 
 repositories:
-  - name: devops
+  - name: django-app
     url: https://github.com/saniola/devops.git
     username: ${github_user}
     password: ${github_pat}

@@ -1,6 +1,8 @@
 # Terraform state files
 *.tfstate
 *.tfstate.backup
+terraform.tfvars
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -1,5 +1,5 @@
 variable "name" {
-  description = "Name of the Helm release"
+  description = "Helm release name"
   type        = string
   default     = "argo-cd"
 }
@@ -11,7 +11,7 @@ variable "namespace" {
 }
 
 variable "chart_version" {
-  description = "Version of the Argo CD chart"
+  description = "Argo CD chart version"
   type        = string
   default     = "5.46.4"
 }

@@ -65,13 +65,13 @@ resource "aws_iam_role_policy" "jenkins_ecr_policy" {
       {
         Effect = "Allow",
         Action = [
-          "ecr:GetAuthorizationToken",
           "ecr:BatchCheckLayerAvailability",
-          "ecr:PutImage",
-          "ecr:InitiateLayerUpload",
-          "ecr:UploadLayerPart",
           "ecr:CompleteLayerUpload",
-          "ecr:DescribeRepositories"
+          "ecr:DescribeRepositories",
+          "ecr:GetAuthorizationToken",
+          "ecr:InitiateLayerUpload",
+          "ecr:PutImage",
+          "ecr:UploadLayerPart"
         ],
         Resource = "*"
       }
@@ -83,7 +83,7 @@ resource "aws_iam_role_policy" "jenkins_ecr_policy" {
 locals {
   jenkins_values = templatefile("${path.module}/values.yaml", {
     github_user     = var.github_user
-    github_pat      = var.github_pat        # <<< sensitive flows in here
+    github_pat      = var.github_pat
     github_repo_url = var.github_repo_url
   })
 }

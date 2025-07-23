@@ -28,6 +28,7 @@ module "vpc" {
   vpc_name            = "vpc"
 }
 
+# Підключаємо модуль ECR
 module "ecr" {
   source           = "./modules/ecr"
   repository_name  = "lesson-8-9-ecr"
@@ -35,7 +36,7 @@ module "ecr" {
 
 module "eks" {
   source          = "./modules/eks"
-  cluster_name    = "lesson-8-9-eks"
+  cluster_name    = "eks-cluster-demo"
   subnet_ids      = module.vpc.public_subnets
   instance_type   = "t3.medium"
   desired_size    = 1
@@ -43,20 +44,48 @@ module "eks" {
   min_size        = 1
 }
 
-
-module "jenkins" {
-  source       = "./modules/jenkins"
-  namespace    = "jenkins"
-  admin_user   = "admin"
-  admin_pass   = "admin123"
-  jenkins_host = "jenkins.local"
+data "aws_eks_cluster_auth" "eks" {
+  name = var.cluster_name
 }
 
+provider "helm" {
+  kubernetes = {
+    host                   = module.eks.eks_cluster_endpoint
+    cluster_ca_certificate = base64decode(module.eks.eks_cluster_ca_data)
+    token                  = data.aws_eks_cluster_auth.eks.token
+  }
+}
+
+module "jenkins" {
+  source            = "./modules/jenkins"
+  cluster_name      = module.eks.eks_cluster_name
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  oidc_provider_url = module.eks.oidc_provider_url
+  github_pat        = var.github_pat
+  github_user       = var.github_user
+  github_repo_url   = var.github_repo_url
+  depends_on        = [module.eks]
+  providers         = {
+    helm       = helm
+    kubernetes = kubernetes
+  }
+}
+
+variable "cluster_name" {
+  description = "The name of the EKS cluster"
+  type        = string
+  default     = "eks-cluster-demo"
+}
+
+provider "kubernetes" {
+  host                   = module.eks.eks_cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks.eks_cluster_ca_data)
+  token                  = data.aws_eks_cluster_auth.eks.token
+}
 
 module "argo_cd" {
-  source            = "./modules/argo_cd"
-  namespace         = "argocd"
-  argo_host         = "argocd.local"
-  repository_url    = "https://github.com/saniola/devops"
-  repository_branch = "lesson-8-9"
+  source        = "./modules/argo_cd"
+  namespace     = "argocd"
+  chart_version = "5.46.4"
+  depends_on    = [module.eks]
 }

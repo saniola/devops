@@ -14,6 +14,6 @@ output "private_subnets" {
 }
 
 output "internet_gateway_id" {
-  description = "ID Internet Gateway"
+  description = "ID of the Internet Gateway"
   value       = aws_internet_gateway.igw.id
 }

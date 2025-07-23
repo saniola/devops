@@ -1,5 +1,5 @@
 resource "aws_iam_role" "nodes" {
-  name = "${var.cluster_name}-eks-nodes"
+  name = "${var.cluster_name}-v1-eks-nodes"
 
   assume_role_policy = jsonencode({
     Version   = "2012-10-17"
@@ -45,7 +45,7 @@ resource "aws_eks_node_group" "general" {
   scaling_config {
     desired_size = var.desired_size
     max_size     = var.max_size
-    min_size     = var.min_size 
+    min_size     = var.min_size
   }
 
   update_config {
