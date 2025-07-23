@@ -1,14 +1,29 @@
-# DevOps Lesson 7 – Deploy Django App to EKS with Terraform and Helm
+# DevOps Lesson 8–9 – Full CI/CD Pipeline with Jenkins, Helm, Terraform & Argo CD
 
-## Project Overview
+## Overview
 
-This project automates the deployment of a Django application on AWS using:
-- Terraform for infrastructure (VPC, ECR, EKS)
-- Docker to build the Django app image
-- Amazon ECR to store the image
-- Helm for deploying the app to Kubernetes
-- ConfigMap for environment variables
-- Horizontal Pod Autoscaler (HPA)
+This project implements a complete CI/CD pipeline for a Django application using:
+- **Jenkins** for building and pushing Docker images
+- **Terraform** for provisioning AWS infrastructure
+- **Amazon ECR** for storing Docker images
+- **Helm** for Kubernetes deployment
+- **Argo CD** for GitOps-based synchronization into EKS
+
+---
+
+## Architecture
+
+```text
+GitHub (main branch)
+      |
+   Jenkins (pipeline build via Jenkinsfile)
+      |
+   Docker image → Amazon ECR
+      |
+   values.yaml updated in Git repo (new tag)
+      |
+   Argo CD detects change and deploys to EKS
+```
 
 ---
 
@@ -16,99 +31,71 @@ This project automates the deployment of a Django application on AWS using:
 
 ```
 lesson-7/
-├── backend.tf              # Remote state backend (S3 + DynamoDB)
-├── main.tf                 # Root Terraform config
-├── outputs.tf              # Outputs from modules
+├── main.tf                  # Entry point for Terraform modules
+├── backend.tf               # Backend config (S3 + DynamoDB)
+├── outputs.tf               # Global outputs
+├── Jenkinsfile              # CI pipeline definition
 ├── modules/
-│   ├── ecr/                # ECR repository for Docker images
-│   ├── eks/                # EKS Kubernetes cluster and node groups
-│   └── vpc/                # VPC, subnets, NAT, routing
+│   ├── vpc/                 # AWS VPC configuration
+│   ├── ecr/                 # Elastic Container Registry
+│   ├── eks/                 # Kubernetes Cluster (EKS)
+│   ├── jenkins/             # Jenkins Helm deployment + config
+│   └── argo_cd/             # Argo CD Helm deployment + Application management
 ├── charts/
-│   └── django-app/
-│       ├── Chart.yaml
-│       ├── values.yaml
-│       └── templates/
-│           ├── deployment.yaml
-│           ├── service.yaml
-│           ├── configmap.yaml
-│           └── hpa.yaml
+│   └── django-app/          # Helm chart for Django application
+│       ├── templates/
+│       └── values.yaml
 ```
 
 ---
 
-## Prerequisites
+## Setup Instructions
 
-- AWS CLI configured
-- kubectl installed
-- Helm installed
-- Docker installed
-- Terraform >= 1.3
-
----
-
-## Terraform Setup
-
-### 1. Initialize and deploy infrastructure
+### 1. Provision Infrastructure
 
 ```bash
 cd lesson-7
 terraform init
-terraform plan
 terraform apply
 ```
 
-### 2. Get access to EKS cluster
+### 2. Configure kubectl access
 
 ```bash
-aws eks --region <your-region> update-kubeconfig --name <your-cluster-name>
+aws eks --region <region> update-kubeconfig --name <your-cluster-name>
 ```
 
 ---
 
-## Build and Push Django Image to ECR
+## CI/CD Flow
 
-```bash
-# Authenticate Docker to ECR
-aws ecr get-login-password --region <your-region> | docker login --username AWS --password-stdin <your-account-id>.dkr.ecr.<your-region>.amazonaws.com
+### Jenkins
 
-# Build Docker image
-docker build -t <your-ecr-repo-name> ./docker
+1. Clones repo and builds Docker image via `Dockerfile`
+2. Pushes image to ECR
+3. Updates `charts/django-app/values.yaml` with the new image tag
+4. Pushes changes to Git (main branch)
 
-# Tag the image
-docker tag <your-ecr-repo-name>:latest <your-account-id>.dkr.ecr.<your-region>.amazonaws.com/<your-ecr-repo-name>:latest
+### Argo CD
 
-# Push the image
-docker push <your-account-id>.dkr.ecr.<your-region>.amazonaws.com/<your-ecr-repo-name>:latest
-```
-
----
-
-## Helm Deployment
-
-```bash
-cd lesson-7/charts/django-app
-
-# Install app with Helm
-helm install django-app . --values values.yaml
-
-# Check deployment
-kubectl get all
-```
+1. Monitors the Git repository for updates
+2. Automatically syncs Helm chart into the EKS cluster
+3. Deploys new version of the app using updated image
 
 ---
 
-## Result
+## Helm Deployment Details
 
-- Kubernetes cluster is created via Terraform.
-- Django image is stored in ECR.
-- Helm is used to deploy the app to EKS.
-- LoadBalancer service exposes the app publicly.
-- Environment variables are stored in a ConfigMap.
-- HPA scales pods based on CPU utilization (min 2, max 6, target 70%).
+- `deployment.yaml` uses `envFrom` to pull variables from ConfigMap
+- `service.yaml` exposes app via LoadBalancer
+- `hpa.yaml` scales app from 2 to 6 pods at >70% CPU
+- `configmap.yaml` holds Django ENV variables
 
 ---
 
-## (Optional) Ingress + TLS
+## Notes
 
-If you have a domain and certificate manager installed, configure ingress with TLS support via cert-manager.
+- Jenkins uses Kaniko for building images inside Kubernetes
+- All provisioning is done via Terraform
+- Argo CD manages apps using declarative GitOps approach
 
