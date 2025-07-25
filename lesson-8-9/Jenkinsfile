@@ -17,11 +17,25 @@ spec:
         - sleep
       args:
         - 99d
-     # Lightweight container that has git + coreutils
+      resources:
+        requests:
+          memory: "512Mi"
+          cpu: "250m"
+        limits:
+          memory: "1Gi"
+          cpu: "500m"
+
     - name: git
       image: alpine/git
-      command: ["cat"]       # keep it idle so Jenkins can exec into it
+      command: ["cat"]
       tty: true
+      resources:
+        requests:
+          memory: "64Mi"
+          cpu: "50m"
+        limits:
+          memory: "128Mi"
+          cpu: "100m"
 """
     }
   }
@@ -41,12 +55,12 @@ spec:
         container('kaniko') {
           sh '''
             cd docker
-            /kaniko/executor \\
-              --context `pwd` \\
-              --dockerfile `pwd`/Dockerfile \\
-              --destination=$ECR_REGISTRY/$IMAGE_NAME:$IMAGE_TAG \\
-              --cache=true \\
-              --insecure \\
+            /kaniko/executor \
+              --context `pwd` \
+              --dockerfile `pwd`/Dockerfile \
+              --destination=$ECR_REGISTRY/$IMAGE_NAME:$IMAGE_TAG \
+              --cache=true \
+              --insecure \
               --skip-tls-verify
           '''
         }
@@ -58,7 +72,6 @@ spec:
         container('git') {
           withCredentials([usernamePassword(credentialsId: 'github-token', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
             sh '''
-
               git clone https://$USERNAME:$PASSWORD@github.com/saniola/devops.git
               cd devops
               git checkout lesson-8-9
