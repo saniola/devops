@@ -56,16 +56,71 @@ lesson-7/
 ```bash
 cd lesson-7
 terraform init
+terraform plan
 terraform apply
 ```
 
-### 2. Configure kubectl access
+### 2. Login to aws ECR
 
 ```bash
-aws eks --region <region> update-kubeconfig --name <your-cluster-name>
+aws ecr get-login-password --region <your-region> | docker login --username AWS --password-stdin <your-account-id>.dkr.ecr.<your-region>.amazonaws.com
+```
+### 3. Build and Push Docker Image
+
+```bash
+# Build Docker image
+docker build -t lesson-8-9 .
+
+# Tag the image for ECR
+docker tag lesson-8-9:latest <your-account-id>.dkr.ecr.<your-region>.amazonaws.com/lesson-8-9-ecr:latest
+
+# Push the image to ECR
+docker push <your-account-id>.dkr.ecr.<your-region>.amazonaws.com/lesson-8-9-ecr:latest
 ```
 
 ---
+
+### 4. Configure kubectl and Deploy with Helm
+
+```bash
+# Update kubeconfig for your EKS cluster
+aws eks --region <your-region> update-kubeconfig --name <your-cluster-name>
+
+# Verify access to the cluster
+kubectl get nodes
+```
+
+#### Deploy Django App using Helm
+
+```bash
+# Navigate to the Helm chart directory
+cd charts/django-app
+
+# Update values.yaml with your ECR image repository and tag
+
+# Install the Helm chart
+helm install django-app .
+```
+
+```bash
+# Get the external URL for the service
+kubectl get svc
+```
+Find the `EXTERNAL-IP` for the `django-app-django` service and open it in your browser to access the Django application.
+
+## Screenshots
+
+### Django Application
+
+![Django Application Screenshot](screenshots/django-app.png)
+
+### Jenkins Pipeline
+
+![Jenkins Pipeline Screenshot](screenshots/jenkins-pipeline.png)
+
+### Argo CD Dashboard
+
+![Argo CD Dashboard Screenshot](screenshots/argocd-dashboard.png)
 
 ## CI/CD Flow
 
