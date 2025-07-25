@@ -112,15 +112,15 @@ Find the `EXTERNAL-IP` for the `django-app-django` service and open it in your b
 
 ### Django Application
 
-![Django Application Screenshot](screenshots/django-app.png)
+![Django Application Screenshot](django.png)
 
 ### Jenkins Pipeline
 
-![Jenkins Pipeline Screenshot](screenshots/jenkins-pipeline.png)
+![Jenkins Pipeline Screenshot](jenkins.png)
 
 ### Argo CD Dashboard
 
-![Argo CD Dashboard Screenshot](screenshots/argocd-dashboard.png)
+![Argo CD Dashboard Screenshot](argocd.png)
 
 ## CI/CD Flow
 
