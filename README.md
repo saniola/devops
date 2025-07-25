@@ -30,7 +30,7 @@ GitHub (main branch)
 ## Project Structure
 
 ```
-lesson-7/
+lesson-8-9/
 ├── main.tf                  # Entry point for Terraform modules
 ├── backend.tf               # Backend config (S3 + DynamoDB)
 ├── outputs.tf               # Global outputs
@@ -54,7 +54,7 @@ lesson-7/
 ### 1. Provision Infrastructure
 
 ```bash
-cd lesson-7
+cd lesson-8-9
 terraform init
 terraform plan
 terraform apply
