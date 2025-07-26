@@ -90,3 +90,43 @@ module "argo_cd" {
   chart_version = "5.46.4"
   depends_on    = [module.eks]
 }
+
+module "rds" {
+  source = "./modules/rds"
+  name                       = "myappnatdb"
+  use_aurora                 = true
+  aurora_instance_count      = 2
+
+  # --- RDS-only ---
+  engine                     = "postgres"
+  engine_version             = "17.2"
+  parameter_group_family_rds = "postgres17"
+  db_name                    = "myappnatdb"
+
+  # --- Aurora-only ---
+  engine_cluster             = "aurora-postgresql"
+  engine_version_cluster     = "15.3"
+  parameter_group_family_aurora = "aurora-postgresql15"
+
+  # Common
+  instance_class             = "db.t3.medium"
+  allocated_storage          = 20
+
+  username                   = "postgres"
+  password                   = "admin123AWS23"
+  subnet_private_ids         = module.vpc.private_subnets
+  subnet_public_ids          = module.vpc.public_subnets
+  publicly_accessible        = true
+  vpc_id                     = module.vpc.vpc_id
+  multi_az                   = true
+  backup_retention_period    = 7
+  parameters = {
+    max_connections              = "200"
+    log_min_duration_statement   = "500"
+  }
+
+  tags = {
+    Environment = "dev"
+    Project     = "myapp-nat"
+  }
+}
