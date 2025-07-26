@@ -93,7 +93,7 @@ module "argo_cd" {
 
 module "rds" {
   source = "./modules/rds"
-  name                       = "myappnatdb"
+  name                       = "kydanovdb"
   use_aurora                 = true
   aurora_instance_count      = 2
 
@@ -101,7 +101,7 @@ module "rds" {
   engine                     = "postgres"
   engine_version             = "17.2"
   parameter_group_family_rds = "postgres17"
-  db_name                    = "myappnatdb"
+  db_name                    = "kydanovdb"
 
   # --- Aurora-only ---
   engine_cluster             = "aurora-postgresql"
@@ -127,6 +127,6 @@ module "rds" {
 
   tags = {
     Environment = "dev"
-    Project     = "myapp-nat"
+    Project     = "myrds"
   }
 }
