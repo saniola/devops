@@ -210,3 +210,21 @@ The module automatically creates:
 | 🛠️ DB Parameters                | Add entries to `parameters` map (key-value pairs)                   |
 
 
+## Grafana Dashboard
+```Instalation Steps:
+   kubectl create namespace monitoring
+   helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+   helm repo update
+   helm install prometheus prometheus-community/prometheus --namespace monitoring
+
+   helm repo add grafana https://grafana.github.io/helm-charts
+   helm repo update
+
+
+   helm install grafana grafana/grafana --namespace monitoring --set adminPassword=admin123
+   kubectl port-forward -n monitoring svc/grafana 3000:80
+```
+
+![Grafana Screenshot](grafana-1.png)
+![Grafana Dashboard Screenshot 1](grafana-2.png)
+![Grafana Dashboard Screenshot 2](grafana-3.png)
